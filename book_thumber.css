@@ -1,0 +1,26 @@
+ul.book-thumber-books {
+	list-style:none;
+}
+ul.book-thumber-books li
+{
+	list-style:none !important;
+	margin-left:0;
+}
+ul.book-thumber-books a  {
+	display:block;
+}
+ul.book-thumber-books a:hover {
+	background-color:#a9d8dC /*$bg_interactive*/;
+}
+ul.book-thumber-books .children {
+	padding-left:1em;
+}
+ul.book-thumber-books button {
+	line-height: 0.7em;
+	padding: 0.2em;
+	text-align: center;
+	width: 18px;
+	margin:0;
+	margin-right:0.5em;
+	float:left;
+}

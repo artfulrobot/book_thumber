@@ -1,0 +1,10 @@
+name = Book Thumber
+description = Ajax-driven Book navigation
+author = Artful Robot
+package = Other
+core = 7.x
+version = 7.x-3.x-dev
+
+dependencies[] = book_thumber
+
+
