@@ -1,5 +1,7 @@
-ul.book-thumber-books {
+.block ul.book-thumber-books {
 	list-style:none;
+	margin-left:0;
+	padding-left:0;
 }
 ul.book-thumber-books li
 {
@@ -11,6 +13,9 @@ ul.book-thumber-books a  {
 }
 ul.book-thumber-books a:hover {
 	background-color:#a9d8dC /*$bg_interactive*/;
+}
+ul.book-thumber-books .book-thumber-pages {
+    padding-left:0;
 }
 ul.book-thumber-books .children {
 	padding-left:1em;

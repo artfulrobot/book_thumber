@@ -5,6 +5,7 @@
  */
 
 
+// Drupal hooks
 //function book_thumber_block_info(  )/*{{{*/
 /** implements hook_info
   */
@@ -25,7 +26,7 @@ function book_thumber_block_view( $delta )/*{{{*/
 
 	switch ($delta) {
 		case 'book_thumber' :
-			$block['subject'] = "Wiki Sections";
+			$block['subject'] = variable_get('book_thumber_blocktitle', 'Sections');
 			$block['content'] = book_thumber_initial();
 	}
 
@@ -36,6 +37,14 @@ function book_thumber_block_view( $delta )/*{{{*/
   */
 function book_thumber_menu()
 {
+
+    $items['admin/config/book_thumber'] = array(
+            'title'            => 'Configure Book Thumber module',
+            'page callback'    => 'drupal_get_form',
+			'page arguments'   => array('book_thumber_admin_form'),
+            'access arguments' => array('access content'),
+            'type'             => MENU_CALLBACK,
+            );
 
     $items['book_thumber_ajax/%'] = array(
             'title'            => 'Ajax callback for book_thumber',
@@ -49,12 +58,12 @@ function book_thumber_menu()
 	return $items;
 }//}}}
 
-function book_thumber_ajax($nid)
+function book_thumber_ajax($nid)/*{{{*/
 {
 	echo book_thumber_next_level($nid);
 	exit();
 
-}
+}/*}}}*/
 function book_thumber_initial()/*{{{*/
 {
 	$html = '';
@@ -66,7 +75,9 @@ function book_thumber_initial()/*{{{*/
 	$children = '';
 	$book_nid = 0;
 	
-	$node = ARL_Array::value_recursive(array('page_arguments',0), $menu);
+	$node = (isset($menu['page_arguments'][0]))
+	        ?$menu['page_arguments'][0]
+            :false;
 	if ($node 
 		&& isset($node->book)
 		&& $book_nid = $node->book['bid']
@@ -79,8 +90,6 @@ function book_thumber_initial()/*{{{*/
 		// start at 2 - we don't want the top book node
 		for ($i=1;$i<=$node->book['depth'];$i++)
 			$mlids[] = $node->book["p$i"];
-		error_log("nid: " . $node->nid);
-		error_log("mlids: " . implode(', ',$mlids));
 
 		// now fetch the nodes
 		$results = db_query(
@@ -97,7 +106,6 @@ function book_thumber_initial()/*{{{*/
 		{
 			foreach ($mlids as $mlid)
 				$ancestry[] = $results->fetch()->nid;
-			error_log("ancestry nids: " . implode(', ',$ancestry));
 		}
 	}
 
@@ -216,4 +224,16 @@ function book_thumber_branch($parent_nid, $ancestry=null )/*{{{*/
 	$html .= '</ul>';
 
 	return $html;
+}/*}}}*/
+
+function book_thumber_admin_form($form, &$form_state)/*{{{*/
+{
+    $form['book_thumber_blocktitle'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Block title'),
+            '#default_value' => variable_get('book_thumber_blocktitle', 'Sections'),
+            '#required' => TRUE,
+        );
+
+   return system_settings_form($form);
 }/*}}}*/
