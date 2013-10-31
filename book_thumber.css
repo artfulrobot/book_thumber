@@ -8,6 +8,7 @@ ul.book-thumber-books li
 }
 ul.book-thumber-books a  {
 	display:block;
+	min-height:24px; /* hack for mozilla buttons */
 }
 ul.book-thumber-books a:hover {
 	background-color:#a9d8dC /*$bg_interactive*/;
