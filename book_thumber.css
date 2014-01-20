@@ -10,7 +10,7 @@ ul.book-thumber-books li
 }
 ul.book-thumber-books a  {
 	display:block;
-	min-height:24px; /* hack for mozilla buttons */
+	/*min-height:24px; /* hack for mozilla buttons */
 }
 ul.book-thumber-books a:hover {
 	background-color:#a9d8dC /*$bg_interactive*/;
@@ -21,7 +21,7 @@ ul.book-thumber-books .book-thumber-pages {
 ul.book-thumber-books .children {
 	padding-left:1em;
 }
-ul.book-thumber-books button {
+ul.book-thumber-books span.button {
 	line-height: 0.7em;
 	padding: 0.2em;
 	text-align: center;
@@ -29,4 +29,8 @@ ul.book-thumber-books button {
 	margin:0;
 	margin-right:0.5em;
 	float:left;
+    cursor:pointer;
+}
+ul.book-thumber-books span.button.disabled {
+    color:#aaa;
 }
