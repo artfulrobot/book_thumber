@@ -6,33 +6,31 @@
 
 
 // Drupal hooks
-//function book_thumber_block_info(  )/*{{{*/
 /** implements hook_info
   */
 function book_thumber_block_info()
 {
-	$blocks['book_thumber'] = array(
-			'info'      => t('Book Thumber'),
-			'status'    => TRUE,
-			'region'    => 'sidebar_first',
-			);  
+    $blocks['book_thumber'] = array(
+            'info'      => t('Book Thumber'),
+            'status'    => TRUE,
+            'region'    => 'sidebar_first',
+            );  
 
-	return $blocks;
-}//}}}
-function book_thumber_block_view( $delta )/*{{{*/
+    return $blocks;
+}
+function book_thumber_block_view( $delta )
 {
-	$block['subject'] = '';
-	$block['content'] = '';
+    $block['subject'] = '';
+    $block['content'] = '';
 
-	switch ($delta) {
-		case 'book_thumber' :
-			$block['subject'] = variable_get('book_thumber_blocktitle', 'Sections');
-			$block['content'] = book_thumber_initial();
-	}
+    switch ($delta) {
+        case 'book_thumber' :
+            $block['subject'] = variable_get('book_thumber_blocktitle', 'Sections');
+            $block['content'] = book_thumber_initial();
+    }
 
-	return $block;
-}//}}}
-//function book_thumber_menu(  )/*{{{*/
+    return $block;
+}
 /** implements hook_menu
   */
 function book_thumber_menu()
@@ -41,7 +39,7 @@ function book_thumber_menu()
     $items['admin/config/book_thumber'] = array(
             'title'            => 'Configure Book Thumber module',
             'page callback'    => 'drupal_get_form',
-			'page arguments'   => array('book_thumber_admin_form'),
+            'page arguments'   => array('book_thumber_admin_form'),
             'access arguments' => array('access content'),
             'type'             => MENU_CALLBACK,
             );
@@ -49,65 +47,65 @@ function book_thumber_menu()
     $items['book_thumber_ajax/%'] = array(
             'title'            => 'Ajax callback for book_thumber',
             'page callback'    => 'book_thumber_ajax',
-			'page arguments'   => array(1),
+            'page arguments'   => array(1),
             'access callback'  => 'user_access',
             'access arguments' => array('access content'),
             'type'             => MENU_CALLBACK,
             );
 
-	return $items;
-}//}}}
+    return $items;
+}
 
-function book_thumber_ajax($nid)/*{{{*/
+function book_thumber_ajax($nid)
 {
-	echo book_thumber_next_level($nid);
-	exit();
+    echo book_thumber_next_level($nid);
+    exit();
 
-}/*}}}*/
-function book_thumber_initial()/*{{{*/
+}
+function book_thumber_initial()
 {
-	$html = '';
-	drupal_add_css( drupal_get_path('module','book_thumber') . '/book_thumber.css', $opts=array('type'=>'file'));
-	drupal_add_js(  drupal_get_path('module','book_thumber') . '/book_thumber.js');
+    $html = '';
+    drupal_add_css( drupal_get_path('module','book_thumber') . '/book_thumber.css', $opts=array('type'=>'file'));
+    drupal_add_js(  drupal_get_path('module','book_thumber') . '/book_thumber.js');
 
-	$menu = menu_get_item();
-	$ancestry = array();
-	$children = '';
-	$book_nid = 0;
-	
-	$node = (isset($menu['page_arguments'][0]))
-	        ?$menu['page_arguments'][0]
+    $menu = menu_get_item();
+    $ancestry = array();
+    $children = '';
+    $book_nid = 0;
+    
+    $node = (isset($menu['page_arguments'][0]))
+            ?$menu['page_arguments'][0]
             :false;
-	if ($node 
-		&& isset($node->book)
-		&& $book_nid = $node->book['bid']
-			)
-	{
-		$html .= "";
-		// we are in a book page
-		// we need to know all the parents pnid1 is the book nid.
-		$mlids = array();
-		// start at 2 - we don't want the top book node
-		for ($i=1;$i<=$node->book['depth'];$i++)
-			$mlids[] = $node->book["p$i"];
+    if ($node 
+        && isset($node->book)
+        && $book_nid = $node->book['bid']
+            )
+    {
+        $html .= "";
+        // we are in a book page
+        // we need to know all the parents pnid1 is the book nid.
+        $mlids = array();
+        // start at 2 - we don't want the top book node
+        for ($i=1;$i<=$node->book['depth'];$i++)
+            $mlids[] = $node->book["p$i"];
 
-		// now fetch the nodes
-		$results = db_query(
-			"SELECT b.nid
-			FROM {menu_links} ml, {book} b
-			WHERE 
-			      ml.mlid IN (:mlids)	
-			  AND ml.mlid=b.mlid AND b.bid=:bid
-		  ORDER BY depth 
-				",
-				 $params=array(':mlids'=>$mlids,':bid'=>$book_nid)
-				 );
-		if ($results->rowCount())
-		{
-			foreach ($mlids as $mlid)
-				$ancestry[] = $results->fetch()->nid;
-		}
-	}
+        // now fetch the nodes
+        $results = db_query(
+            "SELECT b.nid
+            FROM {menu_links} ml, {book} b
+            WHERE 
+                  ml.mlid IN (:mlids)   
+              AND ml.mlid=b.mlid AND b.bid=:bid
+          ORDER BY depth 
+                ",
+                 $params=array(':mlids'=>$mlids,':bid'=>$book_nid)
+                 );
+        if ($results->rowCount())
+        {
+            foreach ($mlids as $mlid)
+                $ancestry[] = $results->fetch()->nid;
+        }
+    }
 
      $books = db_query(
                        "SELECT n.nid, title, 
@@ -115,7 +113,7 @@ function book_thumber_initial()/*{{{*/
                                        (SELECT alias FROM {url_alias} u WHERE  u.source = CONCAT('node/',b.bid)), 
                                        CONCAT('node/',b.bid)) path
                         FROM {node} n, {book} b
-                        WHERE n.nid=b.bid AND b.bid=b.nid
+                        WHERE n.nid=b.bid AND b.bid=b.nid AND n.status = 1
                         GROUP BY b.bid
                         ORDER BY n.title
                         "
@@ -123,110 +121,111 @@ function book_thumber_initial()/*{{{*/
 //                      $opts=array( 'fetch' => PDO::FETCH_ASSOC,)
                         );
 
-	$html .= book_thumber_format_nodes($books, $ancestry,'book-thumber-books');
-	//exit;
-	return $html;
-}/*}}}*/
-function book_thumber_next_level($parent_nid, $recursion=null)/*{{{*/
+    $html .= book_thumber_format_nodes($books, $ancestry,'book-thumber-books');
+    //exit;
+    return $html;
+}
+function book_thumber_next_level($parent_nid, $recursion=null)
 {
-	// find the menu item (mlid) for this book node
-	// then find nodes below this based on
-	//    children_menu.mlid = parent_menu.plid
-	$books = db_query(
-		"SELECT n.nid, 
-				COALESCE(
-					(SELECT alias FROM {url_alias} u WHERE  u.source = CONCAT('node/',n.nid)), 
-					CONCAT('node/',n.nid)) path,
-				n.title
-		FROM {book} pb, {menu_links} pml, {menu_links} cml, {book} cb, {node} n
-		WHERE 
-		      pb.nid= :p_nid 	/* parent nid known */
-		  AND pb.mlid=pml.mlid 	/* parent menu item */
-		  AND pml.mlid=cml.plid	/* child of parent menu items */
-		  AND cml.mlid=cb.mlid	/* child of parent book record*/
-		  AND cb.nid=n.nid		/* child of parent node */
-		ORDER BY cml.weight, n.title
-			",
-			 $params=array(':p_nid'=>$parent_nid)
-			 );
-	if (!$books->rowCount()) return '';
-	$html = '<ul class="book-thumber-pages">';
-	foreach ($books as $book)
-	{
-		$html .= "<li class='book-thumber-page nid-$book->nid' ><span class='button' >&#x229E;</span>"
-			. l($book->title, $book->path)
-			. "</li>";
-	}
-	$html .= '</ul>';
+    // find the menu item (mlid) for this book node
+    // then find nodes below this based on
+    //    children_menu.mlid = parent_menu.plid
+    $books = db_query(
+        "SELECT n.nid, 
+                COALESCE(
+                    (SELECT alias FROM {url_alias} u WHERE  u.source = CONCAT('node/',n.nid)), 
+                    CONCAT('node/',n.nid)) path,
+                n.title
+        FROM {book} pb, {menu_links} pml, {menu_links} cml, {book} cb, {node} n
+        WHERE 
+              pb.nid= :p_nid    /* parent nid known */
+          AND pb.mlid=pml.mlid  /* parent menu item */
+          AND pml.mlid=cml.plid /* child of parent menu items */
+          AND cml.mlid=cb.mlid  /* child of parent book record*/
+          AND cb.nid=n.nid      /* child of parent node */
+        ORDER BY cml.weight, n.title
+            ",
+             $params=array(':p_nid'=>$parent_nid)
+             );
+    if (!$books->rowCount()) return '';
+    $html = '<ul class="book-thumber-pages">';
+    foreach ($books as $book)
+    {
+        $html .= "<li class='book-thumber-page nid-$book->nid' ><button>+</button>"
+            . l($book->title, $book->path)
+            . "</li>";
+    }
+    $html .= '</ul>';
 
-	return $html;
-}/*}}}*/
-function book_thumber_format_nodes($nodes, $ancestry,$class='book-thumber-pages')/*{{{*/
+    return $html;
+}
+function book_thumber_format_nodes($nodes, $ancestry,$class='book-thumber-pages')
 {
-	global $user;
-	if (!$nodes||count($nodes)==0) return '';
-	$html = "<div class='children'><ul class='$class'>";
-	$selected_nid = array_shift($ancestry);
-	foreach ($nodes as $branch)
-	{
-		if ($selected_nid == $branch->nid)
-		{
-			// look up twigs
-			$twigs = db_query(
-				"SELECT n.nid, 
-						COALESCE(
-							(SELECT alias FROM {url_alias} u WHERE  u.source = CONCAT('node/',n.nid)), 
-							CONCAT('node/',n.nid)) path,
-						n.title
-				FROM {book} pb, {menu_links} pml, {menu_links} cml, {book} cb, {node} n
-				WHERE 
-					  pb.nid= :p_nid 	/* parent nid known */
-				  AND pb.mlid=pml.mlid 	/* parent menu item */
-				  AND pml.mlid=cml.plid	/* child of parent menu items */
-				  AND cml.mlid=cb.mlid	/* child of parent book record*/
-				  AND cb.nid=n.nid		/* child of parent node */
-				ORDER BY cml.weight, n.title
-					",
-					 $params=array(':p_nid'=>$selected_nid)
-					 );
-			if ($twigs->rowCount()) $children = book_thumber_format_nodes($twigs, $ancestry);
-			else $children = '';
+    global $user;
+    if (!$nodes||count($nodes)==0) return '';
+    $html = "<div class='children'><ul class='$class'>";
+    $selected_nid = array_shift($ancestry);
+    foreach ($nodes as $branch)
+    {
+        if ($selected_nid == $branch->nid)
+        {
+            // look up twigs
+            $twigs = db_query(
+                "SELECT n.nid, 
+                        COALESCE(
+                            (SELECT alias FROM {url_alias} u WHERE  u.source = CONCAT('node/',n.nid)), 
+                            CONCAT('node/',n.nid)) path,
+                        n.title
+                FROM {book} pb, {menu_links} pml, {menu_links} cml, {book} cb, {node} n
+                WHERE 
+                      pb.nid= :p_nid    /* parent nid known */
+                  AND pb.mlid=pml.mlid  /* parent menu item */
+                  AND pml.mlid=cml.plid /* child of parent menu items */
+                  AND cml.mlid=cb.mlid  /* child of parent book record*/
+                  AND cb.nid=n.nid      /* child of parent node */
+                  AND n.status = 1      /* only published nodes */
+                ORDER BY cml.weight, n.title
+                    ",
+                     $params=array(':p_nid'=>$selected_nid)
+                     );
+            if ($twigs->rowCount()) $children = book_thumber_format_nodes($twigs, $ancestry);
+            else $children = '';
 
-			if (!$children) $button= '<span class="button disabled">&#x229F;</span>';
-			else $button= '<span class="button depressed">&#x229F;</span>';
-			$parent_class = 'expanded';
-		}
-		else 
-		{
-			$children=$selected=$parent_class='';
-			$button = '<span class="button">&#x229E;</span>';
-		}
+            if (!$children) $button= '<button class="disabled">-</button>';
+            else $button= '<button class="depressed">-</button>';
+            $parent_class = 'expanded';
+        }
+        else 
+        {
+            $children=$selected=$parent_class='';
+            $button = '<button>+</button>';
+        }
 
-		$html .= "<li class='book-thumber-page nid-$branch->nid $parent_class' >$button"
-			. l($branch->title, $branch->path)
-			. $children
-			. "</li>";
-	}
-	$html .= '</ul></div>';
+        $html .= "<li class='book-thumber-page nid-$branch->nid $parent_class' >$button"
+            . l($branch->title, $branch->path)
+            . $children
+            . "</li>";
+    }
+    $html .= '</ul></div>';
 
-	return $html;
-}/*}}}*/
-function book_thumber_branch($parent_nid, $ancestry=null )/*{{{*/
+    return $html;
+}
+function book_thumber_branch($parent_nid, $ancestry=null )
 {
-	$html = '<ul class="book-thumber-pages">';
-	foreach ($books as $book)
-	{
-		$html .= "<li class='book-thumber-page nid-$book->nid' ><span class='button'>&#x229E;</span>"
-			. l($book->title, $book->path)
-			. $children
-			. "</li>";
-	}
-	$html .= '</ul>';
+    $html = '<ul class="book-thumber-pages">';
+    foreach ($books as $book)
+    {
+        $html .= "<li class='book-thumber-page nid-$book->nid' ><button>+</button>"
+            . l($book->title, $book->path)
+            . $children
+            . "</li>";
+    }
+    $html .= '</ul>';
 
 	return $html;
 }/*}}}*/
 
-function book_thumber_admin_form($form, &$form_state)/*{{{*/
+function book_thumber_admin_form($form, &$form_state)
 {
     $form['book_thumber_blocktitle'] = array(
             '#type' => 'textfield',
@@ -236,4 +235,4 @@ function book_thumber_admin_form($form, &$form_state)/*{{{*/
         );
 
    return system_settings_form($form);
-}/*}}}*/
+}
