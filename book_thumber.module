@@ -143,6 +143,7 @@ function book_thumber_next_level($parent_nid, $recursion=null)
           AND pml.mlid=cml.plid /* child of parent menu items */
           AND cml.mlid=cb.mlid  /* child of parent book record*/
           AND cb.nid=n.nid      /* child of parent node */
+          AND n.status = 1      /* only published nodes */
         ORDER BY cml.weight, n.title
             ",
              $params=array(':p_nid'=>$parent_nid)
