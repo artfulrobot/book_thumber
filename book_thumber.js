@@ -1,6 +1,5 @@
 Drupal.behaviors.book_thumber = {
   attach: function (context, settings) {
-    console.log("attach ", context);
 		jQuery('.book-thumber-books, .book-thumber-pages', context).find('button').click(Drupal.behaviors.book_thumber.toggle);
   },
 	toggle: function(){
@@ -11,11 +10,11 @@ Drupal.behaviors.book_thumber = {
 			// hide previously show node
 			li.removeClass('expanded');
 			kids.slideUp('fast');
-			jQuery(this).text('\u229E'); // plus
+			jQuery(this).text(Drupal.settings.book_thumber.charHasChildrenClosed); // plus
 		}
 		else {
 			li.addClass('expanded');
-			jQuery(this).text('\u229F');
+			jQuery(this).text(Drupal.settings.book_thumber.charHasChildrenOpen);
 			// show children
 			if (kids.length) {
 				kids.slideDown('fast');
@@ -24,7 +23,7 @@ Drupal.behaviors.book_thumber = {
 
 			// extract nid
 
-			jQuery(this).text('\u22a1').addClass('disabled')[0].disabled = true;
+			jQuery(this).text(Drupal.settings.book_thumber.charNoChildren).addClass('disabled')[0].disabled = true;
 
 			var btn =jQuery(this);
 			// look up children
@@ -33,10 +32,9 @@ Drupal.behaviors.book_thumber = {
             false,
             function(t){
               if (t) {
-                btn.text('\u229F').removeClass('disabled')[0].disabled = false;
+                btn.text(Drupal.settings.book_thumber.charHasChildrenOpen).removeClass('disabled')[0].disabled = false;
               }
               jQuery(this).slideDown('fast');
-              console.log("calling attach ... ", this);
               Drupal.attachBehaviors(this);
               //.find('button').click(Drupal.behaviors.book_thumber.toggle);
             }

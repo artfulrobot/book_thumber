@@ -41,7 +41,7 @@ function book_thumber_menu()
             'page callback'    => 'drupal_get_form',
             'page arguments'   => array('book_thumber_admin_form'),
             'access arguments' => array('access content'),
-            'type'             => MENU_CALLBACK,
+            'type'             => MENU_NORMAL_ITEM,
             );
 
     $items['book_thumber_ajax/%'] = array(
@@ -67,6 +67,7 @@ function book_thumber_initial()
     $html = '';
     drupal_add_css( drupal_get_path('module','book_thumber') . '/book_thumber.css', $opts=array('type'=>'file'));
     drupal_add_js(  drupal_get_path('module','book_thumber') . '/book_thumber.js');
+    drupal_add_js(array('book_thumber' => book_thumber_get_tree_chars('js')), 'setting');
 
     $menu = menu_get_item();
     $ancestry = array();
@@ -150,9 +151,10 @@ function book_thumber_next_level($parent_nid, $recursion=null)
              );
     if (!$books->rowCount()) return '';
     $html = '<ul class="book-thumber-pages">';
+    $chars = book_thumber_get_tree_chars('html');
     foreach ($books as $book)
     {
-        $html .= "<li class='book-thumber-page nid-$book->nid' ><button>&#x229e;</button>"
+        $html .= "<li class='book-thumber-page nid-$book->nid' ><button>$chars[charHasChildrenClosed]</button>"
             . l($book->title, $book->path)
             . "</li>";
     }
@@ -164,6 +166,7 @@ function book_thumber_format_nodes($nodes, $ancestry,$class='book-thumber-pages'
 {
     global $user;
     if (!$nodes||count($nodes)==0) return '';
+    $chars = book_thumber_get_tree_chars('html');
     $html = "<div class='children'><ul class='$class'>";
     $selected_nid = array_shift($ancestry);
     foreach ($nodes as $branch)
@@ -192,14 +195,13 @@ function book_thumber_format_nodes($nodes, $ancestry,$class='book-thumber-pages'
             if ($twigs->rowCount()) $children = book_thumber_format_nodes($twigs, $ancestry);
             else $children = '';
 
-            if (!$children) $button= '<button class="disabled">&#x221a;</button>';
-            else $button= '<button class="depressed">&#x229f;</button>';
+            if (!$children) $button= "<button class='disabled'>$chars[charNoChildren]</button>";
+            else $button= "<button class='depressed'>$chars[charHasChildrenOpen]</button>";
             $parent_class = 'expanded';
         }
-        else 
-        {
+        else {
             $children=$selected=$parent_class='';
-            $button = '<button>&#x229e;</button>';
+            $button = "<button>$chars[charHasChildrenClosed]</button>";
         }
 
         $html .= "<li class='book-thumber-page nid-$branch->nid $parent_class' >$button"
@@ -214,9 +216,10 @@ function book_thumber_format_nodes($nodes, $ancestry,$class='book-thumber-pages'
 function book_thumber_branch($parent_nid, $ancestry=null )
 {
     $html = '<ul class="book-thumber-pages">';
+    $chars = book_thumber_get_tree_chars('html');
     foreach ($books as $book)
     {
-        $html .= "<li class='book-thumber-page nid-$book->nid' ><button>&#x229e;</button>"
+        $html .= "<li class='book-thumber-page nid-$book->nid' ><button>$char[charHasChildrenOpen]</button>"
             . l($book->title, $book->path)
             . $children
             . "</li>";
@@ -235,5 +238,46 @@ function book_thumber_admin_form($form, &$form_state)
             '#required' => TRUE,
         );
 
+
+    $form['book_thumber_tree_chars'] = array(
+            '#type' => 'textarea',
+            '#title' => t('Characters for has children is closed; has children is open; has no children.'),
+            '#description' => t('Enter hexadecimal unicode character codes one per line'),
+            '#default_value' => book_thumber_get_tree_chars('raw'),
+            '#required' => TRUE,
+            '#element_validate' => ['book_thumber_tree_chars_validate'],
+        );
+
    return system_settings_form($form);
+}
+function book_thumber_tree_chars_validate($element, &$form_state) {
+  $value = $element ['#value'];
+  if (!book_thumber_tree_chars_is_valid($value)) {
+    form_error($element, "Must be three lines long");
+  }
+}
+function book_thumber_tree_chars_is_valid($value) {
+  return preg_match('/^[0-9a-f]+[\r\n]{1,2}[0-9a-f]+[\r\n]{1,2}[0-9a-f]+$/i', $value);
+}
+function book_thumber_get_tree_chars($format='html') {
+  $default =  "229E\n229F\n22A1";
+  $raw = variable_get('book_thumber_tree_chars',$default);
+  if (!book_thumber_tree_chars_is_valid($raw)) {
+    $raw = $default;
+  }
+
+  if ($format == 'raw') {
+    return $raw;
+  }
+  $result = array_combine(['charHasChildrenClosed', 'charHasChildrenOpen', 'charNoChildren'],
+    preg_split('/[\r\n]+/', $raw));
+  foreach ($result as &$_) {
+    $_ = "&#x$_;";
+  }
+  if ($format == 'js') {
+    foreach ($result as &$_) {
+      $_ = html_entity_decode($_);
+    }
+  }
+  return $result;
 }
