@@ -73,11 +73,11 @@ function book_thumber_initial()
     $ancestry = array();
     $children = '';
     $book_nid = 0;
-    
+
     $node = (isset($menu['page_arguments'][0]))
             ?$menu['page_arguments'][0]
             :false;
-    if ($node 
+    if ($node
         && isset($node->book)
         && $book_nid = $node->book['bid']
             )
@@ -94,24 +94,24 @@ function book_thumber_initial()
         $results = db_query(
             "SELECT b.nid
             FROM {menu_links} ml, {book} b
-            WHERE 
-                  ml.mlid IN (:mlids)   
+            WHERE
+                  ml.mlid IN (:mlids)
               AND ml.mlid=b.mlid AND b.bid=:bid
-          ORDER BY depth 
+          ORDER BY depth
                 ",
                  $params=array(':mlids'=>$mlids,':bid'=>$book_nid)
                  );
-        if ($results->rowCount())
-        {
-            foreach ($mlids as $mlid)
+        if ($results->rowCount()) {
+            foreach ($mlids as $mlid) {
                 $ancestry[] = $results->fetch()->nid;
+            }
         }
     }
 
      $books = db_query(
-                       "SELECT n.nid, title, 
+                       "SELECT n.nid, title,
                                COALESCE(
-                                       (SELECT alias FROM {url_alias} u WHERE  u.source = CONCAT('node/',b.bid)), 
+                                       (SELECT alias FROM {url_alias} u WHERE  u.source = CONCAT('node/',b.bid)),
                                        CONCAT('node/',b.bid)) path
                         FROM {node} n, {book} b
                         WHERE n.nid=b.bid AND b.bid=b.nid AND n.status = 1
@@ -120,7 +120,7 @@ function book_thumber_initial()
                         "
 //                      $params=array(),
 //                      $opts=array( 'fetch' => PDO::FETCH_ASSOC,)
-                        );
+                        )->fetchAllAssoc('nid');
 
     $html .= book_thumber_format_nodes($books, $ancestry,'book-thumber-books');
     //exit;
@@ -192,7 +192,7 @@ function book_thumber_format_nodes($nodes, $ancestry,$class='book-thumber-pages'
                     ",
                      $params=array(':p_nid'=>$selected_nid)
                      );
-            if ($twigs->rowCount()) $children = book_thumber_format_nodes($twigs, $ancestry);
+            if ($twigs->rowCount()) $children = book_thumber_format_nodes($twigs->fetchAllAssoc('nid'), $ancestry);
             else $children = '';
 
             if (!$children) $button= "<button class='disabled'>$chars[charNoChildren]</button>";
